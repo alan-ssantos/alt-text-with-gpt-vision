@@ -1,26 +1,78 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
+import sizeOf from "image-size";
+import OpenAI from "openai";
+import fs from "fs";
+const bytes = require("bytes");
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+const openai = new OpenAI({ apiKey: "YOUR_API_KEY_HERE" });
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "alt-text-with-gpt-vision" is now active!');
-
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('alt-text-with-gpt-vision.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Alt Text With GPT Vision!');
-	});
-
-	context.subscriptions.push(disposable);
+function convertToBase64(path: fs.PathLike): string {
+	return fs.readFileSync(path, { encoding: "base64" });
 }
 
-// This method is called when your extension is deactivated
+async function GenerateAltText() {
+	if (vscode.window.activeTextEditor) {
+		const editor = vscode.window.activeTextEditor;
+
+		if (editor.selection.isEmpty) {
+			vscode.window.showErrorMessage("There's no image src selection");
+			return;
+		}
+
+		const imageSrc = editor.document.getText(editor.selection);
+
+		if (!vscode.workspace.workspaceFolders) {
+			throw new Error("Pasta do projeto não encontrada.");
+		}
+
+		const rootUri = vscode.workspace.workspaceFolders[0].uri;
+		const fileUri = vscode.Uri.file(`${rootUri.fsPath}/${imageSrc}`);
+		console.log("path: ", fileUri.fsPath);
+
+		const stat = await vscode.workspace.fs.stat(fileUri);
+		const dimensions = sizeOf(fileUri.fsPath);
+
+		console.log("Size: ", bytes(stat.size));
+		console.log("Type: ", dimensions.type); // We currently support PNG (.png), JPEG (.jpeg and .jpg), WEBP (.webp), and non-animated GIF (.gif).
+		console.log(`Dimensions: ${dimensions.width}x${dimensions.height}`);
+
+		const base64 = convertToBase64(fileUri.fsPath);
+
+		const response = await openai.chat.completions.create({
+			model: "gpt-4-vision-preview",
+			messages: [
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "Gere uma descrição adequada da imagem para uso no texto alternativo, seguindo as recomendações de acessibilidade para um site. Resuma a descrição para que tenha no máximo 150 caracteres.",
+						},
+						{
+							type: "image_url",
+							image_url: {
+								url: `data:image/${dimensions.type};base64,${base64}`,
+								detail: "low",
+							},
+						},
+					],
+				},
+			],
+			max_tokens: 150,
+		});
+
+		console.log(response);
+
+		if (response.choices[0].message.content) {
+			vscode.env.clipboard.writeText(response.choices[0].message.content);
+			vscode.window.showInformationMessage(`The alt text was generated and copied.`);
+		}
+	}
+}
+
+export function activate(context: vscode.ExtensionContext) {
+	context.subscriptions.push(vscode.commands.registerCommand("alt-text-with-gpt-vision.GenerateAltText", GenerateAltText));
+}
+
 export function deactivate() {}
+
