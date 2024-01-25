@@ -21,6 +21,30 @@
             "markdownDescription": "Insert your API Key for access to the GPT-4 API. [Get your API Key](https://platform.openai.com/api-keys) or learn [How can you access GPT-4](https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4).",
             "pattern": "^sk-[a-zA-Z0-9]{32,}$",
             "patternErrorMessage": "Please ensure that you provide a valid API Key to proceed."
+          },
+          "alt-text-with-gpt-vision.chat.model": {
+            "type": "string",
+            "enum": [
+              "gpt-4-vision-preview"
+            ],
+            "default": "gpt-4-vision-preview",
+            "markdownDescription": "Choose the [GPT-4 with Vision](https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo) model that will be used to read the image."
+          },
+          "alt-text-with-gpt-vision.chat.prompt": {
+            "type": "string",
+            "default": "Generate an appropriate image description for use in alt text, following accessibility recommendations for a website. Summarize the description so that it has a maximum of 150 characters.",
+            "minLength": 11,
+            "markdownDescription": "Define the content of the message to generate personalized results. [See](https://platform.openai.com/docs/guides/prompt-engineering)"
+          },
+          "alt-text-with-gpt-vision.chat.detail": {
+            "type": "string",
+            "enum": [
+              "low",
+              "high",
+              "auto"
+            ],
+            "default": "auto",
+            "markdownDescription": "Define the [fidelity image understanding](https://platform.openai.com/docs/guides/vision/low-or-high-fidelity-image-understanding)."
           }
         }
       }

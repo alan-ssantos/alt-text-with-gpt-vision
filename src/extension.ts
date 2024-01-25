@@ -14,7 +14,7 @@ function convertToBase64(path: fs.PathLike): string {
 }
 
 async function GenerateAltText() {
-	const { apiKey } = vscode.workspace.getConfiguration("alt-text-with-gpt-vision");
+	const { apiKey, chat } = vscode.workspace.getConfiguration("alt-text-with-gpt-vision");
 
 	if (!checkApiKeyFormat(apiKey)) {
 		vscode.window.showErrorMessage("The API key format is invalid, make sure you provide a [valid key](https://platform.openai.com/api-keys).");
@@ -51,20 +51,20 @@ async function GenerateAltText() {
 		const base64 = convertToBase64(fileUri.fsPath);
 
 		const response = await openai.chat.completions.create({
-			model: "gpt-4-vision-preview",
+			model: chat.model,
 			messages: [
 				{
 					role: "user",
 					content: [
 						{
 							type: "text",
-							text: "Gere uma descrição adequada da imagem para uso no texto alternativo, seguindo as recomendações de acessibilidade para um site. Resuma a descrição para que tenha no máximo 150 caracteres.",
+							text: chat.prompt,
 						},
 						{
 							type: "image_url",
 							image_url: {
 								url: `data:image/${dimensions.type};base64,${base64}`,
-								detail: "low",
+								detail: chat.detail,
 							},
 						},
 					],
