@@ -12,12 +12,40 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": [
+      {
+        "title": "Alt Text With GPT Vision",
+        "properties": {
+          "alt-text-with-gpt-vision.apiKey": {
+            "type": "string",
+            "markdownDescription": "Insert your API Key for access to the GPT-4 API. [Get your API Key](https://platform.openai.com/api-keys) or learn [How can you access GPT-4](https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4).",
+            "pattern": "^sk-[a-zA-Z0-9]{32,}$",
+            "patternErrorMessage": "Please ensure that you provide a valid API Key to proceed."
+          }
+        }
+      }
+    ],
     "commands": [
       {
         "command": "alt-text-with-gpt-vision.GenerateAltText",
         "title": "Generate Alt Text"
       }
-    ]
+    ],
+    "keybindings": [
+      {
+        "command": "alt-text-with-gpt-vision.GenerateAltText",
+        "key": "shift+alt+t"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorHasSelection",
+          "command": "alt-text-with-gpt-vision.GenerateAltText",
+          "group": "Alternative Text"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

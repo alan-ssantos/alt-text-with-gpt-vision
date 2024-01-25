@@ -4,13 +4,25 @@ import OpenAI from "openai";
 import fs from "fs";
 const bytes = require("bytes");
 
-const openai = new OpenAI({ apiKey: "YOUR_API_KEY_HERE" });
+function checkApiKeyFormat(key: string): boolean {
+	const regex = new RegExp(/^sk-[a-zA-Z0-9]{32,}$/);
+	return regex.test(key);
+}
 
 function convertToBase64(path: fs.PathLike): string {
 	return fs.readFileSync(path, { encoding: "base64" });
 }
 
 async function GenerateAltText() {
+	const { apiKey } = vscode.workspace.getConfiguration("alt-text-with-gpt-vision");
+
+	if (!checkApiKeyFormat(apiKey)) {
+		vscode.window.showErrorMessage("The API key format is invalid, make sure you provide a [valid key](https://platform.openai.com/api-keys).");
+		return;
+	}
+
+	const openai = new OpenAI({ apiKey });
+
 	if (vscode.window.activeTextEditor) {
 		const editor = vscode.window.activeTextEditor;
 
